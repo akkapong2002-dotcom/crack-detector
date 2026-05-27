@@ -1,12 +1,13 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from PIL import Image
 import os
 from dotenv import load_dotenv
 
 # โหลด API Key
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY"))
 
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(
@@ -31,9 +32,6 @@ if uploaded_file is not None:
     if st.button("🔎 วิเคราะห์รอยแตกร้าว"):
         with st.spinner("กำลังวิเคราะห์..."):
 
-            # ส่งรูปให้ Gemini วิเคราะห์
-            model = genai.GenerativeModel("gemini-2.5-flash")
-
             prompt = """
             คุณเป็นวิศวกรโยธาผู้เชี่ยวชาญด้านการตรวจสอบโครงสร้าง
             กรุณาวิเคราะห์รูปภาพนี้และตอบในรูปแบบต่อไปนี้:
@@ -49,7 +47,10 @@ if uploaded_file is not None:
             กรุณาตอบเป็นภาษาไทย
             """
 
-            response = model.generate_content([prompt, image])
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[prompt, image]
+            )
 
             st.success("✅ วิเคราะห์เสร็จแล้ว!")
             st.markdown("### 📋 ผลการวิเคราะห์")
